@@ -1,4 +1,4 @@
-package cs.uni.tradeapp.webservice.spring;
+package cs.uni.tradeapp.webservice.appconfig;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

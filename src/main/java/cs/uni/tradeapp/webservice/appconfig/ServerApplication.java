@@ -1,4 +1,4 @@
-package cs.uni.tradeapp.webservice.spring;
+package cs.uni.tradeapp.webservice.appconfig;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

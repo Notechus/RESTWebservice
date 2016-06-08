@@ -1,4 +1,4 @@
-package cs.uni.tradeapp.webservice.spring;
+package cs.uni.tradeapp.webservice.appconfig;
 
 import cs.uni.tradeapp.utils.data.Option;
 import cs.uni.tradeapp.utils.spring.RestServiceDetails;

@@ -75,6 +75,21 @@ public class MongoConnector
 		db.getCollection("Options").insertOne(doc);
 	}
 
+	public Option getOption(String id)
+	{
+		BasicDBObject query = new BasicDBObject();
+		query.put("_id", new ObjectId(id));
+		Document d = db.getCollection("Options").find(query).first();
+		Option o = new Option();
+		o.setId(d.getObjectId("_id").toString());
+		o.setUnderlying(d.getString("Underlying"));
+		o.setDirection(d.getString("Direction"));
+		o.setStrike(d.getDouble("Strike"));
+		o.setMaturity(simpleDateFormat.format(d.getDate("Maturity")));
+
+		return o;
+	}
+
 	public OptionTrade[] getOptionTrades(String trader)
 	{
 		BasicDBObject query = new BasicDBObject();

@@ -1,4 +1,4 @@
-package cs.uni.tradeapp.webservice.marketlistener;
+package cs.uni.tradeapp.webservice.appconfig;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

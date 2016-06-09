@@ -2,6 +2,7 @@ package cs.uni.tradeapp.webservice.appconfig;
 
 import cs.uni.tradeapp.utils.spring.RestServiceDetails;
 import cs.uni.tradeapp.webservice.mongo.MongoConnector;
+import cs.uni.tradeapp.webservice.mongo.TradeStore;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
@@ -52,9 +53,9 @@ public class AppConfiguration
 	private ServiceInstance<RestServiceDetails> serviceInstance;
 
 	@Bean(destroyMethod = "close")
-	public MongoConnector createMongoConnector()
+	public TradeStore createMongoConnector()
 	{
-		return new MongoConnector(connectionString, database);
+		return new TradeStore(connectionString, database);
 	}
 
 	@Bean()

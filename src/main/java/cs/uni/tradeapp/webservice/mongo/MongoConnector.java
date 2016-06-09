@@ -22,10 +22,10 @@ public class MongoConnector
 		db = mongoClient.getDatabase(dbname);
 	}
 
-	/* options part */
-
-
-
+	public MongoDatabase getDb()
+	{
+		return this.db;
+	}
 
 
 	public void close()

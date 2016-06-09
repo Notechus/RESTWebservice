@@ -4,6 +4,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import cs.uni.tradeapp.utils.data.StockPosition;
 import cs.uni.tradeapp.utils.data.TradePosition;
 import org.bson.Document;
 import org.slf4j.Logger;
@@ -35,10 +36,18 @@ public class DBPositionController extends DBController
 		ArrayList<TradePosition> tmp = new ArrayList<>();
 		while (cursor.hasNext())
 		{
+			Document d = cursor.next();
 			TradePosition t = new TradePosition();
+			t.setId(d.getObjectId("_id").toString());
+			t.setOptionId(d.getString("OptionID"));
+			t.setUnderlying(d.getString("Underlying"));
+			t.setNotional(d.getInteger("Notional"));
+			t.setQuantity(d.getDouble("Quantity"));
+			t.setDelta(d.getDouble("Delta"));
+			tmp.add(t);
 		}
-
-		return null;
+		TradePosition[] pos = new TradePosition[tmp.size()];
+		return tmp.toArray(pos);
 	}
 
 	public void addOrUpdateTradePosition(TradePosition t, String trader)
@@ -50,9 +59,61 @@ public class DBPositionController extends DBController
 		MongoCursor<Document> cursor = positions.find(query).iterator();
 		if (cursor.hasNext())
 		{
+			Document tmp = cursor.next();
+			Document d = new Document("OptionID", t.getOptionId());
+			Document set = new Document("$set", new Document("Quantity", tmp.getDouble("Quantity") + t.getQuantity()));
+			positions.updateOne(d, set);
+		} else
+		{
+			Document doc = new Document("OptionID", t.getOptionId())
+					.append("Underlying", t.getUnderlying())
+					.append("Notional", t.getNotional())
+					.append("Quantity", t.getQuantity())
+					.append("Delta", t.getDelta())
+					.append("TraderID", trader);
 
+			positions.insertOne(doc);
 		}
-
 	}
 
+	public StockPosition[] getStockPositions(String trader)
+	{
+		BasicDBObject query = new BasicDBObject();
+		query.put("TraderID", trader);
+		MongoCollection<Document> positions = db.getCollection(this.stockName);
+		MongoCursor<Document> cursor = positions.find(query).iterator();
+		ArrayList<StockPosition> tmp = new ArrayList<>();
+		while (cursor.hasNext())
+		{
+			Document d = cursor.next();
+			StockPosition s = new StockPosition();
+			s.setId(d.getObjectId("_id").toString());
+			s.setUnderlying(d.getString("Underlying"));
+			s.setAmount(d.getDouble("Amount"));
+			tmp.add(s);
+		}
+		StockPosition[] pos = new StockPosition[tmp.size()];
+		return tmp.toArray(pos);
+	}
+
+	public void addOrUpdateTradePosition(StockPosition s, String trader)
+	{
+		BasicDBObject query = new BasicDBObject();
+		query.put("TraderID", trader);
+		query.put("Underlying", s.getUnderlying());
+		MongoCollection<Document> positions = db.getCollection(this.stockName);
+		MongoCursor<Document> cursor = positions.find(query).iterator();
+		if (cursor.hasNext())
+		{
+			Document tmp = cursor.next();
+			Document d = new Document("Underlying", s.getUnderlying());
+			Document set = new Document("$set", new Document("Amount", tmp.getDouble("Amount") + s.getAmount()));
+			positions.updateOne(d, set);
+		} else
+		{
+			Document doc = new Document("Underlying", s.getUnderlying())
+					.append("Amount", s.getAmount())
+					.append("TraderID", trader);
+		}
+	}
 }

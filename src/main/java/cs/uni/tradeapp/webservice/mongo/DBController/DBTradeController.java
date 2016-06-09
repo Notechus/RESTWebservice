@@ -75,14 +75,15 @@ public class DBTradeController extends DBController
 		return tmp.toArray(res);
 	}
 
-	public void addOptionTrade(OptionTrade o, String trader)
+	public String addOptionTrade(OptionTrade o, String trader)
 	{
 		Document doc = new Document("Underlying", o.getUnderlying())
-				.append("OptionID", o.getId())
+				.append("OptionID", o.getOptionId())
 				.append("Quantity", o.getQuantity())
 				.append("TraderID", trader);
 
 		db.getCollection(this.documentName).insertOne(doc);
+		return db.getCollection(this.documentName).find(doc).iterator().next().getObjectId("_id").toString();
 	}
 
 	public void deleteOptionTrade(ObjectId id)

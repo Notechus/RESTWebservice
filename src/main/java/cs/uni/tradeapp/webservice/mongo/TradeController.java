@@ -2,7 +2,9 @@ package cs.uni.tradeapp.webservice.mongo;
 
 import cs.uni.tradeapp.utils.data.OptionTrade;
 import cs.uni.tradeapp.utils.data.StockTrade;
+import cs.uni.tradeapp.utils.data.TradePosition;
 import cs.uni.tradeapp.webservice.mongo.DBController.DBOptionController;
+import cs.uni.tradeapp.webservice.mongo.DBController.DBPositionController;
 import cs.uni.tradeapp.webservice.mongo.DBController.DBTradeController;
 import cs.uni.tradeapp.webservice.mongo.DBController.DBTraderController;
 import org.slf4j.Logger;
@@ -43,9 +45,12 @@ public class TradeController
 	{
 		DBTraderController traderController = (DBTraderController) tradeStore.getController(TradeStore.Context.TRADER);
 		DBTradeController tradeController = (DBTradeController) tradeStore.getController(TradeStore.Context.TRADE);
+		DBPositionController positionController = (DBPositionController) tradeStore.getController(TradeStore.Context.POSITION);
 		String traderID = traderController.getTraderID(trade.getTrader());
 		log.info("POST " + trade.getUnderlying() + " , " + trade.getId() + " , " + trade.getQuantity() + " , " + trade.getTradeType() + " , " + trade.getTrader());
-		tradeController.addOptionTrade(trade, traderID);
+		String tradeID = tradeController.addOptionTrade(trade, traderID);
+		positionController.addOrUpdateTradePosition(new TradePosition(trade.getId(), trade.getOptionId(), trade
+				.getUnderlying(), trade.getQuantity(), 0.0), traderID);
 	}
 
 	@CrossOrigin

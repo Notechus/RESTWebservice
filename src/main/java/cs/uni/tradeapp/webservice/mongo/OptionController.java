@@ -32,7 +32,7 @@ public class OptionController
 		DBOptionController optionController = (DBOptionController) tradeStore.getController(TradeStore.Context.OPTION);
 		String traderID = traderController.getTraderID(trader);
 		Option[] res = optionController.getOptions(traderID);
-		log.info("returning " + res);
+		log.info("returning {}", res);
 		return res;
 	}
 

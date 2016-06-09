@@ -34,7 +34,7 @@ public class TradeController
 		DBTradeController tradeController = (DBTradeController) tradeStore.getController(TradeStore.Context.TRADE);
 		String traderID = traderController.getTraderID(trader);
 		OptionTrade[] options = tradeController.getOptionTrades(traderID);
-		log.info("returning " + options);
+		log.info("returning {}", options);
 		return options;
 	}
 
@@ -47,8 +47,9 @@ public class TradeController
 		DBTradeController tradeController = (DBTradeController) tradeStore.getController(TradeStore.Context.TRADE);
 		DBPositionController positionController = (DBPositionController) tradeStore.getController(TradeStore.Context.POSITION);
 		String traderID = traderController.getTraderID(trade.getTrader());
-		log.info("POST " + trade.getUnderlying() + " , " + trade.getId() + " , " + trade.getQuantity() + " , " + trade.getTradeType() + " , " + trade.getTrader());
-		String tradeID = tradeController.addOptionTrade(trade, traderID);
+		log.info("POST " + trade.getUnderlying() + " , " + trade.getOptionId() + " , " + trade.getQuantity() + " , " +
+				trade.getTradeType() + " , " + trade.getTrader());
+		tradeController.addOptionTrade(trade, traderID);
 		positionController.addOrUpdateTradePosition(new TradePosition(trade.getId(), trade.getOptionId(), trade
 				.getUnderlying(), trade.getQuantity(), 0.0), traderID);
 	}
@@ -61,7 +62,7 @@ public class TradeController
 		DBTradeController tradeController = (DBTradeController) tradeStore.getController(TradeStore.Context.TRADE);
 		String traderID = traderController.getTraderID(trader);
 		StockTrade[] stocks = tradeController.getStockTrades(traderID);
-		log.info("returning " + stocks);
+		log.info("returning {}", stocks);
 		return stocks;
 	}
 

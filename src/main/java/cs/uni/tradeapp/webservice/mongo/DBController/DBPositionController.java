@@ -41,7 +41,7 @@ public class DBPositionController extends DBController
 			t.setId(d.getObjectId("_id").toString());
 			t.setOptionId(d.getString("OptionID"));
 			t.setUnderlying(d.getString("Underlying"));
-			t.setNotional(d.getInteger("Notional"));
+			t.setNotional(d.getDouble("Notional"));
 			t.setQuantity(d.getDouble("Quantity"));
 			t.setDelta(d.getDouble("Delta"));
 			tmp.add(t);

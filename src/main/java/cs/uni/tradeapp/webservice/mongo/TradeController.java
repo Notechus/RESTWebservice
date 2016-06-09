@@ -2,6 +2,9 @@ package cs.uni.tradeapp.webservice.mongo;
 
 import cs.uni.tradeapp.utils.data.OptionTrade;
 import cs.uni.tradeapp.utils.data.StockTrade;
+import cs.uni.tradeapp.webservice.mongo.DBController.DBOptionController;
+import cs.uni.tradeapp.webservice.mongo.DBController.DBTradeController;
+import cs.uni.tradeapp.webservice.mongo.DBController.DBTraderController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +22,16 @@ public class TradeController
 	private static final String STOCK_PATH = "/api/trade/stock";
 
 	@Autowired
-	private MongoConnector mongo;
+	private TradeStore tradeStore;
 
 	@CrossOrigin
 	@RequestMapping(path = OPTION_PATH, method = RequestMethod.GET)
 	public OptionTrade[] getOption(@RequestParam(value = "trader") String trader) throws Exception
 	{
-		OptionTrade[] options = mongo.getOptionTrades(trader);
+		DBTraderController traderController = (DBTraderController) tradeStore.getController(TradeStore.Context.TRADER);
+		DBTradeController tradeController = (DBTradeController) tradeStore.getController(TradeStore.Context.TRADE);
+		String traderID = traderController.getTraderID(trader);
+		OptionTrade[] options = tradeController.getOptionTrades(traderID);
 		log.info("returning " + options);
 		return options;
 	}
@@ -35,19 +41,21 @@ public class TradeController
 	@ResponseStatus(value = HttpStatus.OK)
 	public void postOption(@RequestBody OptionTrade trade)
 	{
+		DBTraderController traderController = (DBTraderController) tradeStore.getController(TradeStore.Context.TRADER);
+		DBTradeController tradeController = (DBTradeController) tradeStore.getController(TradeStore.Context.TRADE);
+		String traderID = traderController.getTraderID(trade.getTrader());
 		log.info("POST " + trade.getUnderlying() + " , " + trade.getId() + " , " + trade.getQuantity() + " , " + trade.getTradeType() + " , " + trade.getTrader());
-		mongo.addOptionTrade(trade);
+		tradeController.addOptionTrade(trade, traderID);
 	}
 
 	@CrossOrigin
 	@RequestMapping(path = STOCK_PATH, method = RequestMethod.GET)
 	public StockTrade[] getStock(@RequestParam(value = "trader") String trader)
 	{
-		StockTrade[] stocks = mongo.getStockTrades(trader);
-		for (StockTrade i : stocks)
-		{
-			log.info(i.getUnderlying());
-		}
+		DBTraderController traderController = (DBTraderController) tradeStore.getController(TradeStore.Context.TRADER);
+		DBTradeController tradeController = (DBTradeController) tradeStore.getController(TradeStore.Context.TRADE);
+		String traderID = traderController.getTraderID(trader);
+		StockTrade[] stocks = tradeController.getStockTrades(traderID);
 		log.info("returning " + stocks);
 		return stocks;
 	}
@@ -57,7 +65,10 @@ public class TradeController
 	@ResponseStatus(value = HttpStatus.OK)
 	public void postStock(@RequestBody StockTrade trade)
 	{
+		DBTraderController traderController = (DBTraderController) tradeStore.getController(TradeStore.Context.TRADER);
+		DBTradeController tradeController = (DBTradeController) tradeStore.getController(TradeStore.Context.TRADE);
+		String traderID = traderController.getTraderID(trade.getTrader());
 		log.info("POST " + trade.getUnderlying() + " , " + trade.getQuantity() + " , " + trade.getTradeType() + " , " + trade.getTrader());
-		mongo.addStockTrade(trade);
+		tradeController.addStockTrade(trade, traderID);
 	}
 }

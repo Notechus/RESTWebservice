@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 /**
@@ -35,8 +36,13 @@ public class DBOptionController extends DBController
 	{
 		BasicDBObject query = new BasicDBObject();
 		query.put("TraderID", trader);
+		return query(query);
+	}
+
+	public Option[] getOptions()
+	{
 		MongoCollection<Document> options = db.getCollection(this.documentName);
-		MongoCursor<Document> cursor = options.find(query).iterator();
+		MongoCursor<Document> cursor = options.find().iterator();
 		ArrayList<Option> tmp = new ArrayList<>();
 		while (cursor.hasNext())
 		{
@@ -55,6 +61,13 @@ public class DBOptionController extends DBController
 		tmp.toArray(res);
 		cursor.close();
 		return res;
+	}
+
+	public Option[] getOptionsForMaturity(LocalDateTime maturity) throws ParseException
+	{
+		BasicDBObject query = new BasicDBObject();
+		query.put("Maturity", simpleDateFormat.parse(maturity.toString()));
+		return query(query);
 	}
 
 	public void addOption(Option o, String trader) throws ParseException, DuplicateKeyException
@@ -82,6 +95,30 @@ public class DBOptionController extends DBController
 		o.setMaturity(simpleDateFormat.format(d.getDate("Maturity")));
 
 		return o;
+	}
+
+	public Option[] query(BasicDBObject query)
+	{
+		MongoCollection<Document> options = db.getCollection(this.documentName);
+		MongoCursor<Document> cursor = options.find(query).iterator();
+		ArrayList<Option> tmp = new ArrayList<>();
+		while (cursor.hasNext())
+		{
+			Document d = cursor.next();
+			Option o = new Option();
+			o.setId(d.getObjectId("_id").toString());
+			o.setMaturity(simpleDateFormat.format(d.getDate("Maturity")));
+			o.setUnderlying(d.getString("Underlying"));
+			o.setDirection(d.getString("Direction"));
+			o.setStrike(d.getDouble("Strike"));
+			o.setTrader(d.getString("Trader"));
+			o.setNotional(d.getDouble("Notional"));
+			tmp.add(o);
+		}
+		Option[] res = new Option[tmp.size()];
+		tmp.toArray(res);
+		cursor.close();
+		return res;
 	}
 
 }

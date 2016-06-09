@@ -60,9 +60,7 @@ public class DBPositionController extends DBController
 		if (cursor.hasNext())
 		{
 			Document tmp = cursor.next();
-			Document d = new Document("OptionID", t.getOptionId());
-			Document set = new Document("$set", new Document("Quantity", tmp.getDouble("Quantity") + t.getQuantity()));
-			positions.updateOne(d, set);
+			updateQuantity(t.getOptionId(), tmp.getDouble("Quantity") + t.getQuantity());
 		} else
 		{
 			Document doc = new Document("OptionID", t.getOptionId())
@@ -74,6 +72,20 @@ public class DBPositionController extends DBController
 
 			positions.insertOne(doc);
 		}
+	}
+
+	public void updateQuantity(String optionID, double newQuantity)
+	{
+		Document d = new Document("OptionID", optionID);
+		double q = getQuantity(optionID);
+		Document set = new Document("$set", new Document("Quantity", q + newQuantity));
+		db.getCollection(this.documentName).updateOne(d, set);
+	}
+
+	public double getQuantity(String optionID)
+	{
+		Document d = new Document("OptionID", optionID);
+		return db.getCollection(this.documentName).find(d).iterator().next().getDouble("Quantity");
 	}
 
 	public StockPosition[] getStockPositions(String trader)

@@ -1,6 +1,8 @@
 package cs.uni.tradeapp.webservice.mongo;
 
 import cs.uni.tradeapp.utils.data.Option;
+import cs.uni.tradeapp.webservice.mongo.DBController.DBOptionController;
+import cs.uni.tradeapp.webservice.mongo.DBController.DBTraderController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,15 +22,16 @@ public class OptionController
 
 
 	@Autowired
-	private MongoConnector mongo;
-
-
+	private TradeStore tradeStore;
 
 	@CrossOrigin
 	@RequestMapping(path = PATH, method = RequestMethod.GET)
 	public Option[] get(@RequestParam(value = "trader") String trader) throws Exception
 	{
-		Option[] res = mongo.getOptions(trader);
+		DBTraderController traderController = (DBTraderController) tradeStore.getController(TradeStore.Context.TRADER);
+		DBOptionController optionController = (DBOptionController) tradeStore.getController(TradeStore.Context.OPTION);
+		String traderID = traderController.getTraderID(trader);
+		Option[] res = optionController.getOptions(traderID);
 		log.info("returning " + res);
 		return res;
 	}
@@ -38,7 +41,10 @@ public class OptionController
 	@ResponseStatus(value = HttpStatus.OK)
 	public void post(@RequestBody Option option) throws ParseException
 	{
+		DBTraderController traderController = (DBTraderController) tradeStore.getController(TradeStore.Context.TRADER);
+		DBOptionController optionController = (DBOptionController) tradeStore.getController(TradeStore.Context.OPTION);
+		String traderID = traderController.getTraderID(option.getTrader());
 		log.info("POST " + option.getUnderlying() + " , " + option.getNotional() + " , " + option.getMaturity() + " , " + option.getDirection() + " , " + option.getStrike() + " , " + option.getTrader());
-		mongo.addOption(option);
+		optionController.addOption(option, traderID);
 	}
 }

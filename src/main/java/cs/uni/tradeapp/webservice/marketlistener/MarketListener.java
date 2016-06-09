@@ -6,6 +6,7 @@ import cs.uni.tradeapp.utils.data.RiskCalculationTaskObject;
 import cs.uni.tradeapp.utils.data.StockMessage;
 import cs.uni.tradeapp.utils.zookeeper.MyDistributedQueue;
 import cs.uni.tradeapp.webservice.mongo.MongoConnector;
+import cs.uni.tradeapp.webservice.mongo.TradeStore;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCache;
@@ -15,8 +16,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.core.MessageSendingOperations;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -48,7 +51,7 @@ public class MarketListener
 	private MyDistributedQueue taskQueue;
 
 	@Autowired
-	private MongoConnector mongoConnector;
+	private TradeStore tradeStore;
 
 	@Autowired
 	public MarketListener(MessageSendingOperations<String> messagingTemplate)
@@ -88,10 +91,16 @@ public class MarketListener
 		return t;
 	}
 
+	@Scheduled(fixedRate = 1000)
+	public void execute() throws ParseException
+	{
+		tradeStore.executeTrades(getLatestPrices());
+	}
+
 	public void fetchTask(Hashtable<String, Double> prices)
 	{
 		ArrayList<RiskCalculationTaskObject> options = new ArrayList<>();
-		
+
 	}
 
 	public Hashtable<String, Double> getLatestPrices()

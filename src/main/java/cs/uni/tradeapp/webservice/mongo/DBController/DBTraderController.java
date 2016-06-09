@@ -39,10 +39,10 @@ public class DBTraderController extends DBController
 		db.getCollection(this.documentName).deleteOne(d);
 	}
 
-	public Trader getTraderDetails(String username)
+	public Trader getTraderDetails(String id)
 	{
 		BasicDBObject query = new BasicDBObject();
-		query.put("username", username);
+		query.put("_id", new ObjectId(id));
 		MongoCollection<Document> users = db.getCollection(this.documentName);
 		Document d = users.find(query).first();
 
@@ -66,14 +66,14 @@ public class DBTraderController extends DBController
 		return d.getObjectId("_id").toString();
 	}
 
-	public void updateTraderPV(String username, double value)
+	public void updateTraderPV(String id, double value)
 	{
-		Trader t = getTraderDetails(username);
+		Trader t = getTraderDetails(id);
 		t.setPV(t.getPV() + value);
-		Document d = new Document("username", username);
+		Document d = new Document("_id", new ObjectId(id));
 		Document set = new Document("$set", new Document("PV", t.getPV()));
 		db.getCollection(this.documentName).updateOne(d, set);
-		log.info("Updated " + username + " PV:{}", t.getPV());
+		log.info("Updated " + t.getUsername() + " PV:{}", t.getPV());
 	}
 
 	public void updateTraderDelta(String username, double value)

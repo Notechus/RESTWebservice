@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 
 /**
  * Created by Notechus on 06/09/2016.
@@ -63,10 +64,11 @@ public class DBOptionController extends DBController
 		return res;
 	}
 
-	public Option[] getOptionsForMaturity(LocalDateTime maturity) throws ParseException
+	public Option[] getOptionsForMaturity(Date maturity) throws ParseException
 	{
 		BasicDBObject query = new BasicDBObject();
-		query.put("Maturity", simpleDateFormat.parse(maturity.toString()));
+		//query.put("Maturity", simpleDateFormat.parse(maturity.toString()));
+		query.put("Maturity", maturity);
 		return query(query);
 	}
 
@@ -111,7 +113,6 @@ public class DBOptionController extends DBController
 			o.setUnderlying(d.getString("Underlying"));
 			o.setDirection(d.getString("Direction"));
 			o.setStrike(d.getDouble("Strike"));
-			o.setTrader(d.getString("Trader"));
 			o.setNotional(d.getDouble("Notional"));
 			tmp.add(o);
 		}

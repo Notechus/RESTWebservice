@@ -109,7 +109,7 @@ public class MarketListener
 		Map<String, ChildData> children = priceCache.getCurrentChildren(PATH);
 		for (String key : children.keySet())
 		{
-			log.info("key: {} has {}", key, new String(children.get(key).getData()));
+			//log.info("key: {} has {}", key, new String(children.get(key).getData()));
 			latestPrices.put(key, Double.parseDouble(new String(children.get(key).getData())));
 		}
 		return latestPrices;

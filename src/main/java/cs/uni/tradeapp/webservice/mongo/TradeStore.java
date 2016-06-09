@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
 
 /**
@@ -57,10 +58,10 @@ public class TradeStore
 
 	public void executeTrades(Hashtable<String, Double> prices) throws ParseException
 	{
-		log.info("Executing trades");
-		Option[] options = optionController.getOptionsForMaturity(LocalDateTime.now());
+		Option[] options = optionController.getOptionsForMaturity(new Date());
 		log.info("Found {} trades to execute.", options.length);
 		if (options.length == 0) return;
+		log.info("Executing trades");
 		OptionTrade[] trades = tradeController.getOptionTradesForIDs(options);
 		for (OptionTrade t : trades)
 		{

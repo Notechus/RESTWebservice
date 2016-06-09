@@ -1,5 +1,6 @@
 package cs.uni.tradeapp.webservice.marketlistener;
 
+import cs.uni.tradeapp.utils.data.Option;
 import cs.uni.tradeapp.utils.data.OptionTrade;
 import cs.uni.tradeapp.utils.data.RiskCalculationTaskObject;
 import cs.uni.tradeapp.utils.data.StockMessage;
@@ -90,7 +91,7 @@ public class MarketListener
 	public void fetchTask(Hashtable<String, Double> prices)
 	{
 		ArrayList<RiskCalculationTaskObject> options = new ArrayList<>();
-		OptionTrade[] trades = mongoConnector.getOptionTrades(USER);
+		
 	}
 
 	public Hashtable<String, Double> getLatestPrices()

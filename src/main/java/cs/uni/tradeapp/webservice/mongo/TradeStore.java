@@ -2,6 +2,7 @@ package cs.uni.tradeapp.webservice.mongo;
 
 import cs.uni.tradeapp.utils.data.Option;
 import cs.uni.tradeapp.utils.data.OptionTrade;
+import cs.uni.tradeapp.utils.data.RiskCalculationTaskResult;
 import cs.uni.tradeapp.webservice.mongo.DBController.*;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -23,13 +24,16 @@ public class TradeStore
 	private DBOptionController optionController;
 	private DBTradeController tradeController;
 
+	public Hashtable<Option, RiskCalculationTaskResult> hedgedOptions;
+
 	public TradeStore(String connectionString, String database)
 	{
+		this.hedgedOptions = new Hashtable<>();
 		this.mongoConnector = new MongoConnector(connectionString, database);
-		traderController = new DBTraderController(mongoConnector.getDb());
-		positionController = new DBPositionController(mongoConnector.getDb());
-		optionController = new DBOptionController(mongoConnector.getDb());
-		tradeController = new DBTradeController(mongoConnector.getDb());
+		this.traderController = new DBTraderController(mongoConnector.getDb());
+		this.positionController = new DBPositionController(mongoConnector.getDb());
+		this.optionController = new DBOptionController(mongoConnector.getDb());
+		this.tradeController = new DBTradeController(mongoConnector.getDb());
 	}
 
 	public DBController getController(Context c)

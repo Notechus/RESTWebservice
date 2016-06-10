@@ -128,9 +128,14 @@ public class MarketListener
 		}.getType();
 		try
 		{
+			DBOptionController optionController = (DBOptionController) tradeStore.getController(TradeStore.Context.OPTION);
 			Hashtable<RiskCalculationTaskObject, RiskCalculationTaskResult> result =
 					(Hashtable<RiskCalculationTaskObject, RiskCalculationTaskResult>)
 							jsonBuilder.deserialize(new String(resultQueue.remove()), type);
+			for (RiskCalculationTaskObject key : result.keySet())
+			{
+				optionController.updateOptionValue(key.getOption().getId(), result.get(key).getPresentValue());
+			}
 			log.info("Fetched results");
 		} catch (Exception e)
 		{

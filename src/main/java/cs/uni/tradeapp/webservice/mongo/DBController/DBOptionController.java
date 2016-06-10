@@ -73,9 +73,15 @@ public class DBOptionController extends DBController
 	public Option[] getOptionsForMaturity(Date maturity) throws ParseException
 	{
 		BasicDBObject query = new BasicDBObject();
-		//query.put("Maturity", simpleDateFormat.parse(maturity.toString()));
 		query.put("Maturity", maturity);
 		return query(query);
+	}
+
+	public double getOptionValue(String id)
+	{
+		BasicDBObject query = new BasicDBObject();
+		query.put("_id", new ObjectId(id));
+		return db.getCollection(this.documentName).find(query).iterator().next().getDouble("Value");
 	}
 
 	public void addOption(Option o, String trader) throws ParseException, DuplicateKeyException
@@ -84,10 +90,19 @@ public class DBOptionController extends DBController
 				.append("Direction", o.getDirection())
 				.append("Maturity", simpleDateFormat.parse(o.getMaturity()))
 				.append("Strike", o.getStrike())
+				.append("Value", o.getValue())
 				.append("TraderID", trader)
 				.append("Notional", o.getNotional());
 
 		db.getCollection(this.documentName).insertOne(doc);
+	}
+
+	public void updateOptionValue(String id, double value)
+	{
+		double val = getOptionValue(id);
+		Document d = new Document("_id", new ObjectId(id));
+		Document set = new Document("$set", new Document("Value", val + value));
+		db.getCollection(this.documentName).updateOne(d, set);
 	}
 
 	public Option getOption(String id)
@@ -119,6 +134,7 @@ public class DBOptionController extends DBController
 			o.setUnderlying(d.getString("Underlying"));
 			o.setDirection(d.getString("Direction"));
 			o.setStrike(d.getDouble("Strike"));
+			o.setValue(d.getDouble("Value"));
 			o.setNotional(d.getDouble("Notional"));
 			tmp.add(o);
 		}

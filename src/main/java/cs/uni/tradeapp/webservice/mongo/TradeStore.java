@@ -1,21 +1,13 @@
 package cs.uni.tradeapp.webservice.mongo;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoCursor;
 import cs.uni.tradeapp.utils.data.Option;
 import cs.uni.tradeapp.utils.data.OptionTrade;
-import cs.uni.tradeapp.utils.data.Trader;
 import cs.uni.tradeapp.webservice.mongo.DBController.*;
-import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import java.text.ParseException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 

@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -23,7 +22,7 @@ import java.util.Date;
 public class DBOptionController extends DBController
 {
 	private final Logger log = LoggerFactory.getLogger(getClass());
-	private final String ISO_DATE_FORMAT = "YYYY-MM-DD'T'HH:mm:ssZ";
+	private final String ISO_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssX";
 	private SimpleDateFormat simpleDateFormat;
 
 	public DBOptionController(MongoDatabase db)
@@ -37,6 +36,13 @@ public class DBOptionController extends DBController
 	{
 		BasicDBObject query = new BasicDBObject();
 		query.put("TraderID", trader);
+		return query(query);
+	}
+
+	public Option[] getOptionsForTicker(String ticker)
+	{
+		BasicDBObject query = new BasicDBObject();
+		query.put("Underlying", ticker);
 		return query(query);
 	}
 

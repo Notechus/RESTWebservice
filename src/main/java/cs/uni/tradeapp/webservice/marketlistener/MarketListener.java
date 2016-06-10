@@ -1,11 +1,13 @@
 package cs.uni.tradeapp.webservice.marketlistener;
 
+import com.google.gson.reflect.TypeToken;
 import cs.uni.tradeapp.utils.data.Option;
-import cs.uni.tradeapp.utils.data.OptionTrade;
 import cs.uni.tradeapp.utils.data.RiskCalculationTaskObject;
+import cs.uni.tradeapp.utils.data.RiskCalculationTaskResult;
 import cs.uni.tradeapp.utils.data.StockMessage;
+import cs.uni.tradeapp.utils.json.JsonBuilder;
 import cs.uni.tradeapp.utils.zookeeper.MyDistributedQueue;
-import cs.uni.tradeapp.webservice.mongo.MongoConnector;
+import cs.uni.tradeapp.webservice.mongo.DBController.DBOptionController;
 import cs.uni.tradeapp.webservice.mongo.TradeStore;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -14,17 +16,18 @@ import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.core.MessageSendingOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by Notechus on 06/08/2016.
@@ -36,10 +39,10 @@ public class MarketListener
 	private static final String URL = "/api/market/price.stock.";
 	private static final String PATH = "/trade-application/prices";
 	private static final String QUEUE_PATH = "/trade-application/tasks/worker1";
-	private static final String USER = "SebastianPaulus";
+	private static final String RESULT_PATH = "/trade-application/results/worker1";
 
+	private JsonBuilder jsonBuilder = new JsonBuilder();
 	private MessageSendingOperations<String> messagingTemplate;
-	private AtomicBoolean brokerAvailable = new AtomicBoolean();
 
 	@Autowired
 	private CuratorFramework curator;
@@ -48,7 +51,12 @@ public class MarketListener
 	private TreeCache priceCache;
 
 	@Autowired
+	@Qualifier("taskQueue")
 	private MyDistributedQueue taskQueue;
+
+	@Autowired
+	@Qualifier("resultQueue")
+	MyDistributedQueue resultQueue;
 
 	@Autowired
 	private TradeStore tradeStore;
@@ -57,13 +65,8 @@ public class MarketListener
 	public MarketListener(MessageSendingOperations<String> messagingTemplate)
 	{
 		this.messagingTemplate = messagingTemplate;
-	}
-
-
-	@Bean(initMethod = "createQueue")
-	public MyDistributedQueue taskQueue()
-	{
-		return new MyDistributedQueue(curator, QUEUE_PATH);
+		this.taskQueue = new MyDistributedQueue(curator, QUEUE_PATH);
+		this.resultQueue = new MyDistributedQueue(curator, RESULT_PATH);
 	}
 
 	@Bean(initMethod = "start", destroyMethod = "close")
@@ -76,16 +79,14 @@ public class MarketListener
 			if (type == TreeCacheEvent.Type.NODE_UPDATED)
 			{
 				Hashtable<String, Double> prices = getLatestPrices();
+				String name = treeCacheEvent.getData().getPath().substring(PATH.length() + 1);
+				double newPrice = Double.parseDouble(new String(treeCacheEvent.getData().getData()));
+				log.info("Changed data {} on {}", newPrice, name);
 				log.info("Sending updated prices");
 				sendPrices(prices);
 				log.info("Fetching hedger");
-				//taskQueue.put("nothing".getBytes());
+				price(name, newPrice);
 
-			/*
-			 * 1. get trades from mongo
-			 * 2. assign task for pricer
-			 * 3. fetch result and update trader data
-			 */
 			}
 		});
 		return t;
@@ -97,7 +98,48 @@ public class MarketListener
 		tradeStore.executeTrades(getLatestPrices());
 	}
 
-	public void fetchTask(Hashtable<String, Double> prices)
+	public void price(String ticker, double newPrice) throws Exception
+	{
+		Type type = new TypeToken<Hashtable<RiskCalculationTaskObject, RiskCalculationTaskResult>>()
+		{
+		}.getType();
+		Hashtable<RiskCalculationTaskObject, RiskCalculationTaskResult> task = new Hashtable<>();
+		DBOptionController optionController = (DBOptionController) tradeStore.getController(TradeStore.Context.OPTION);
+		Option[] options = optionController.getOptionsForTicker(ticker);
+		if (options.length > 0)
+		{
+			for (Option o : options)
+			{
+				log.info("Pricing {}", o.getId());
+				RiskCalculationTaskObject taskObject = new RiskCalculationTaskObject();
+				taskObject.setNewPrice(newPrice);
+				taskObject.setOption(o);
+				task.put(taskObject, new RiskCalculationTaskResult());
+			}
+			taskQueue.put(jsonBuilder.serialize(task, type).getBytes());
+		}
+	}
+
+	@Scheduled(fixedRate = 200)
+	public void fetchResult() throws Exception
+	{
+		Type type = new TypeToken<Hashtable<RiskCalculationTaskObject, RiskCalculationTaskResult>>()
+		{
+		}.getType();
+		try
+		{
+			Hashtable<RiskCalculationTaskObject, RiskCalculationTaskResult> result =
+					(Hashtable<RiskCalculationTaskObject, RiskCalculationTaskResult>)
+							jsonBuilder.deserialize(new String(resultQueue.remove()), type);
+			log.info("Fetched results");
+		} catch (Exception e)
+		{
+
+		}
+
+	}
+
+	public void hedge(Hashtable<String, Double> prices)
 	{
 		ArrayList<RiskCalculationTaskObject> options = new ArrayList<>();
 
@@ -117,7 +159,7 @@ public class MarketListener
 
 	public void sendPrices(Hashtable<String, Double> prices)
 	{
-		log.info("sending prices");
+		log.info("Sending prices");
 		for (String key : prices.keySet())
 		{
 			StockMessage msg = new StockMessage();

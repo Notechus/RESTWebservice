@@ -1,6 +1,7 @@
 package cs.uni.tradeapp.webservice.appconfig;
 
 import cs.uni.tradeapp.utils.spring.RestServiceDetails;
+import cs.uni.tradeapp.utils.zookeeper.MyDistributedQueue;
 import cs.uni.tradeapp.webservice.mongo.MongoConnector;
 import cs.uni.tradeapp.webservice.mongo.TradeStore;
 import org.apache.curator.framework.CuratorFramework;
@@ -33,7 +34,8 @@ public class AppConfiguration
 	public static final String SERVICE_PATH = "/trade-application/services";
 	private static final String connectionString = "mongodb://localhost:27017,localhost:37017,localhost:47017";
 	private static final String database = "TradeStore";
-
+	private static final String QUEUE_PATH = "/trade-application/tasks/worker1";
+	private static final String RESULT_PATH = "/trade-application/results/worker1";
 	@Value("${server.port:9000}")
 	private Integer port;
 
@@ -52,8 +54,20 @@ public class AppConfiguration
 	@Autowired
 	private ServiceInstance<RestServiceDetails> serviceInstance;
 
+	@Bean()
+	public MyDistributedQueue taskQueue()
+	{
+		return new MyDistributedQueue(curatorFramework, QUEUE_PATH);
+	}
+
+	@Bean()
+	public MyDistributedQueue resultQueue()
+	{
+		return new MyDistributedQueue(curatorFramework, RESULT_PATH);
+	}
+
 	@Bean(destroyMethod = "close")
-	public TradeStore createMongoConnector()
+	public TradeStore createTradeStore()
 	{
 		return new TradeStore(connectionString, database);
 	}
